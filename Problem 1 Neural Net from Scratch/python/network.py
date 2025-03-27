@@ -104,40 +104,36 @@ def update_weights(x, t, w, b, Wt, bt, lr):
     y, a_y, h, a_h = evaluate_network(x, w, b, Wt, bt)
     
     w_new = w - lr * np.sum(
-            (              sigmoid(a_h)    )
-          * ((
-                (              sigmoid(a_y) - t)
-              * (derivative_of_sigmoid(a_y)    )
-            )[:,None] @ np.ones((1, 2)))
-    , 0)/t.shape[0]
+            sigmoid(a_h)
+            * (
+                (sigmoid(a_y) - t) 
+                * derivative_of_sigmoid(a_y)
+            )[:,None]
+        , 0)/t.shape[0]
     
     b_new = b - lr * np.sum(
-          (              sigmoid(a_y) - t) 
-        * (derivative_of_sigmoid(a_y)    )
-    )/t.shape[0]
-    
-    
-    Wt_new = np.zeros_like(Wt)
-    bt_new = np.zeros_like(bt)
-    
-    for neuron in range(Wt.shape[0]):
-
-        Wt_new[:,neuron] = Wt[:,neuron].flatten() - (lr * np.sum(
-           x
-              * np.outer(
-                w[neuron] 
-                * (derivative_of_sigmoid(a_h[:,neuron]))
-                * (              sigmoid(a_y) - t)
-                * (derivative_of_sigmoid(a_y)    )
-                , np.ones((1, 2)))
-            , 0)/t.shape[0])
-        
-        bt_new[neuron] = bt[neuron] - lr * np.sum(
-        w[neuron]
-        * (       derivative_of_sigmoid(a_h[:,neuron])    )
-        * (                     sigmoid(a_y) - t) 
-        * (       derivative_of_sigmoid(a_y)    )
+            (sigmoid(a_y) - t) 
+            * derivative_of_sigmoid(a_y)
         )/t.shape[0]
+    
+    Wt_new = Wt - (lr * np.sum(
+            x[:,:,np.newaxis]
+            * np.transpose(w[:,None])
+            * derivative_of_sigmoid(a_h)[:,None]
+            * (
+                (sigmoid(a_y) - t)
+                * derivative_of_sigmoid(a_y)
+            )[:, np.newaxis, np.newaxis]
+        , 0)/t.shape[0])
+        
+    bt_new = bt - lr * np.sum(
+            np.transpose(w[:,None])
+            * derivative_of_sigmoid(a_h)
+            * (
+                (sigmoid(a_y) - t) 
+                * derivative_of_sigmoid(a_y)
+            )[:, np.newaxis]
+        , 0)/t.shape[0]
     
     return w_new, b_new, Wt_new, bt_new
 
